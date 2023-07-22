@@ -6,8 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -40,20 +45,20 @@ public class ProductPrice {
     @Column(name = "is_active")
     private Boolean isActive;
 
-    private String createBy;
+    @CreatedDate
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    private Long createAt;
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
 
-    private Long updateAt;
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-    @PrePersist
-    private void onPersist() {
-        if (createAt == null) createAt = System.currentTimeMillis();
-    }
-
-    @PreUpdate
-    private void onUpdate() {
-        if (updateAt == null) updateAt = System.currentTimeMillis();
-    }
+    @LastModifiedBy
+    @Column(name = "updated_by")
+    private String updatedBy;
 
 }

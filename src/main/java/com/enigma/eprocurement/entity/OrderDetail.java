@@ -16,7 +16,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 @Entity
-@Table(name = "m_order_detail")
+@Table(name = "t_order_detail")
 public class OrderDetail {
 
     @Id

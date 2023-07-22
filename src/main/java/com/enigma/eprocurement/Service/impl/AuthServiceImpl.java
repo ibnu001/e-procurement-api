@@ -3,10 +3,8 @@ package com.enigma.eprocurement.Service.impl;
 import com.enigma.eprocurement.Service.AdminService;
 import com.enigma.eprocurement.Service.AuthService;
 import com.enigma.eprocurement.Service.RoleService;
-import com.enigma.eprocurement.entity.Admin;
-import com.enigma.eprocurement.entity.Role;
-import com.enigma.eprocurement.entity.UserCredential;
-import com.enigma.eprocurement.entity.UserDetailsImpl;
+import com.enigma.eprocurement.Service.VendorService;
+import com.enigma.eprocurement.entity.*;
 import com.enigma.eprocurement.entity.constant.ERole;
 import com.enigma.eprocurement.model.request.AuthRequest;
 import com.enigma.eprocurement.model.response.LoginResponse;
@@ -39,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
     private final BCryptUtils bCryptUtils;
     private final RoleService roleService;
     private final AdminService adminService;
-//    private final VendorService vendorService;
+    private final VendorService vendorService;
     private final JwtUtils jwtUtils;
     private final ValidationUtil validationUtil;
 
@@ -55,7 +53,10 @@ public class AuthServiceImpl implements AuthService {
                     .build();
             userCredentialRepository.saveAndFlush(credential);
 
+            String name = request.getEmail().split("@")[0];
+
             Admin admin = Admin.builder()
+                    .name(name)
                     .email(request.getEmail())
                     .userCredential(credential)
                     .build();
@@ -67,8 +68,30 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public RegisterResponse registerVendor(AuthRequest request) {
-        return null;
+    public RegisterResponse registerVendor(AuthRequest request, Authentication authentication) {
+        try {
+            Role role = roleService.getOrSave(ERole.ROLE_VENDOR);
+            UserCredential credential = UserCredential.builder()
+                    .email(request.getEmail())
+                    .password(bCryptUtils.hashPassword(request.getPassword()))
+                    .roles(List.of(role))
+                    .build();
+            userCredentialRepository.saveAndFlush(credential);
+
+            String name = request.getEmail().split("@")[0];
+            String adminName = authentication.getName();
+
+            Vendor vendor = Vendor.builder()
+                    .createdBy(adminName)
+                    .name(name)
+                    .email(request.getEmail())
+                    .userCredential(credential)
+                    .build();
+            vendorService.create(vendor);
+            return RegisterResponse.builder().email(credential.getEmail()).build();
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "user already exist");
+        }
     }
 
     @Override

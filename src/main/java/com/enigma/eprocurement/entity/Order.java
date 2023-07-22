@@ -17,7 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 @Entity
-@Table(name = "m_order")
+@Table(name = "t_order")
 public class Order {
 
     @Id

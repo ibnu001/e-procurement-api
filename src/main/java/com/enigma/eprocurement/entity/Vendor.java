@@ -5,8 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -30,29 +35,27 @@ public class Vendor {
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
 
-    @OneToOne(targetEntity = Address.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "address_id")
-    private Address address;
+    @Column(name = "address_id")
+    private String address;
 
     @OneToOne
     @JoinColumn(name = "user_credential_id")
     private UserCredential userCredential;
 
-    private String createBy;
+    @CreatedDate
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    private Long createAt;
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
 
-    private Long updateAt;
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-    @PrePersist
-    private void onPersist() {
-        if (createAt == null) createAt = System.currentTimeMillis();
-    }
-
-    @PreUpdate
-    private void onUpdate() {
-        if (updateAt == null) updateAt = System.currentTimeMillis();
-    }
-
+    @LastModifiedBy
+    @Column(name = "updated_by")
+    private String updatedBy;
 
 }
