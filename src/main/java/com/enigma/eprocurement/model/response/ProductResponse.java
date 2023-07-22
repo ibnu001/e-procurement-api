@@ -2,8 +2,7 @@ package com.enigma.eprocurement.model.response;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)

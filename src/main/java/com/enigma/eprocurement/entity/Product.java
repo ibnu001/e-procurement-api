@@ -40,9 +40,12 @@ public class Product {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.REMOVE)
     @JsonManagedReference
     private List<ProductPrice> productPrices;
+
+    @Column(name = "is_delete")
+    private Boolean isDelete;
 
     @CreatedDate
     @Column(name = "created_at")

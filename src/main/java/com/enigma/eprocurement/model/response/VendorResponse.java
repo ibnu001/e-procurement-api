@@ -2,8 +2,7 @@ package com.enigma.eprocurement.model.response;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
@@ -12,7 +11,6 @@ public class VendorResponse {
     private String id;
     private String name;
     private String address;
-
     private String mobilePhone;
 
 }

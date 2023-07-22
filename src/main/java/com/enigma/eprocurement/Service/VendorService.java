@@ -6,4 +6,6 @@ public interface VendorService {
 
     Vendor create(Vendor vendor);
 
+    Vendor getById(String id);
+
 }

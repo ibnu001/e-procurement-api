@@ -11,8 +11,9 @@ public interface ProductService {
     ProductResponse create(ProductRequest request);
     List<ProductResponse> createBulk(List<ProductRequest> products);
     ProductResponse getById(String id);
-    Page<ProductResponse> getAllByNameOrPrice(String name, Long maxPrice, Integer page, Integer size);
-    ProductResponse update(ProductRequest product);
-    void deleteById(String id);
+    Page<ProductResponse> getAllByNameOrPrice(String name, Long price, Integer page, Integer size);
+    ProductResponse update(ProductRequest request);
+    void hardDeleteById(String id);
+    void softDeleteById(String id);
 
 }

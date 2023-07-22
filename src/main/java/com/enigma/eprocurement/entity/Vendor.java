@@ -32,8 +32,8 @@ public class Vendor {
     @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "phone_number", unique = true)
-    private String phoneNumber;
+    @Column(name = "mobile_phone", unique = true)
+    private String mobilePhone;
 
     @Column(name = "address_id")
     private String address;

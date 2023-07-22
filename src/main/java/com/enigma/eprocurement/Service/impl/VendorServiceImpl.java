@@ -24,4 +24,9 @@ public class VendorServiceImpl implements VendorService {
         }
     }
 
+    @Override
+    public Vendor getById(String id) {
+        return vendorRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "vendor not found"));
+    }
+
 }
