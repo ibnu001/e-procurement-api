@@ -8,6 +8,6 @@ import org.springframework.security.core.Authentication;
 public interface AuthService {
 
     RegisterResponse registerAdmin(AuthRequest request);
-    RegisterResponse registerVendor(AuthRequest request, Authentication authentication);
+    RegisterResponse registerVendor(AuthRequest request);
     LoginResponse login(AuthRequest request);
 }

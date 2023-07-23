@@ -45,20 +45,26 @@ public class ProductPrice {
     @Column(name = "is_active")
     private Boolean isActive;
 
-    @CreatedDate
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private Long createdAt;
 
-    @CreatedBy
     @Column(name = "created_by")
     private String createdBy;
 
-    @LastModifiedDate
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Long updatedAt;
 
-    @LastModifiedBy
     @Column(name = "updated_by")
     private String updatedBy;
+
+    @PrePersist
+    private void onPersist() {
+        if (createdAt == null) createdAt = System.currentTimeMillis();
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        if (updatedAt == null) updatedAt = System.currentTimeMillis();
+    }
 
 }

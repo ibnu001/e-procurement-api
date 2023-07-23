@@ -67,9 +67,12 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Transactional(rollbackOn = Exception.class)
     @Override
-    public RegisterResponse registerVendor(AuthRequest request, Authentication authentication) {
+    public RegisterResponse registerVendor(AuthRequest request) {
         try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
             Role role = roleService.getOrSave(ERole.ROLE_VENDOR);
             UserCredential credential = UserCredential.builder()
                     .email(request.getEmail())
@@ -79,12 +82,11 @@ public class AuthServiceImpl implements AuthService {
             userCredentialRepository.saveAndFlush(credential);
 
             String name = request.getEmail().split("@")[0];
-            String adminName = authentication.getName();
 
             Vendor vendor = Vendor.builder()
-                    .createdBy(adminName)
                     .name(name)
                     .email(request.getEmail())
+                    .createdBy(authentication.getName())
                     .userCredential(credential)
                     .build();
             vendorService.create(vendor);

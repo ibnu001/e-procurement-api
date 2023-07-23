@@ -20,6 +20,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -45,11 +47,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse create(ProductRequest request) {
         validationUtil.validate(request);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Vendor vendor = vendorService.getById(request.getVendorId());
 
         Product product = Product.builder()
                 .productCode(generateProductCode())
                 .name(request.getProductName())
+                .createdBy(authentication.getName())
                 .description(request.getDescription())
                 .category(categoryService.getOrSave(request.getCategory()))
                 .isDelete(false)
@@ -60,6 +65,7 @@ public class ProductServiceImpl implements ProductService {
                 .price(request.getPrice())
                 .stock(request.getStock())
                 .vendor(vendor)
+                .createdBy(authentication.getName())
                 .product(product)
                 .isActive(true)
                 .build();
@@ -116,10 +122,13 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(rollbackOn = Exception.class)
     @Override
     public ProductResponse update(ProductRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Product product = findByIdOrThrowNotFound(request.getProductId());
         product.setName(request.getProductName());
         product.setDescription(request.getDescription());
         product.setCategory(categoryService.getOrSave(request.getCategory()));
+        product.setUpdatedBy(authentication.getName());
 
         ProductPrice productPriceActive = productPriceService.findProductPriceActive(request.getProductId(), true);
 
@@ -132,6 +141,10 @@ public class ProductServiceImpl implements ProductService {
                     .price(request.getPrice())
                     .stock(request.getStock())
                     .product(product)
+                    .createdAt(product.getCreatedAt())
+                    .createdBy(product.getCreatedBy())
+                    .updatedAt(System.currentTimeMillis())
+                    .updatedBy(authentication.getName())
                     .vendor(productPriceActive.getVendor())
                     .isActive(true)
                     .build());
@@ -144,16 +157,21 @@ public class ProductServiceImpl implements ProductService {
         return toProductResponse(product, productPriceActive, productPriceActive.getVendor());
     }
 
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public void hardDeleteById(String id) {
         Product product = findByIdOrThrowNotFound(id);
         productRepository.delete(product);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public void softDeleteById(String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Product product = findByIdOrThrowNotFound(id);
         product.setIsDelete(true);
+        product.setUpdatedBy(authentication.getName());
         productRepository.save(product);
     }
 

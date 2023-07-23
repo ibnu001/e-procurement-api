@@ -12,6 +12,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,6 +28,7 @@ public class VendorServiceImpl implements VendorService {
 
     private final VendorRepository vendorRepository;
 
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public Vendor create(Vendor vendor) {
         try {
@@ -40,12 +43,16 @@ public class VendorServiceImpl implements VendorService {
         return vendorRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "vendor not found"));
     }
 
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public VendorResponse update(VendorRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Vendor vendor = getById(request.getVendorId());
         vendor.setName(request.getName());
         vendor.setAddress(request.getAddress());
         vendor.setMobilePhone(request.getMobilePhone());
+        vendor.setUpdatedBy(authentication.getName());
 
         vendorRepository.save(vendor);
 

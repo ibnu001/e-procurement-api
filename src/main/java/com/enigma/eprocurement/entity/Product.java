@@ -29,8 +29,6 @@ public class Product {
     @GeneratedValue(generator = "system-uuid")
     private String id;
 
-    @GenericGenerator(strategy = "com.enigma.entity.CustomIdGenerator", name = "custom-id")
-    @GeneratedValue(generator = "custom-id")
     @Column(name = "product_code")
     private String productCode;
 
@@ -51,19 +49,15 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @CreatedDate
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private Long createdAt;
 
-    @CreatedBy
     @Column(name = "created_by")
     private String createdBy;
 
-    @LastModifiedDate
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Long updatedAt;
 
-    @LastModifiedBy
     @Column(name = "updated_by")
     private String updatedBy;
 
@@ -73,5 +67,15 @@ public class Product {
 
     public void addProductPrice(ProductPrice productPrice) {
         productPrices.add(productPrice);
+    }
+
+    @PrePersist
+    private void onPersist() {
+        if (createdAt == null) createdAt = System.currentTimeMillis();
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        if (updatedAt == null) updatedAt = System.currentTimeMillis();
     }
 }

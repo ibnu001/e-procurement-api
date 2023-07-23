@@ -36,7 +36,11 @@ public class Admin {
     @JoinColumn(name = "user_credential_id")
     private UserCredential userCredential;
 
-    @CreatedDate
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private Long createdAt;
+
+    @PrePersist
+    private void onPersist() {
+        if (createdAt == null) createdAt = System.currentTimeMillis();
+    }
 }

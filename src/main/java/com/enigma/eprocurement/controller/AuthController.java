@@ -37,8 +37,8 @@ public class AuthController {
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping(path = "/register-vendor")
-    public ResponseEntity<?> registerVendor(@RequestBody AuthRequest request, Authentication authentication) {
-        RegisterResponse register = authService.registerVendor(request, authentication);
+    public ResponseEntity<?> registerVendor(@RequestBody AuthRequest request) {
+        RegisterResponse register = authService.registerVendor(request);
         CommonResponse<Object> commonResponse = CommonResponse.builder()
                 .statusCode(HttpStatus.CREATED.value())
                 .message("successfully registered")
