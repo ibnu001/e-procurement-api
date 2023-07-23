@@ -35,7 +35,7 @@ public class Vendor {
     @Column(name = "mobile_phone", unique = true)
     private String mobilePhone;
 
-    @Column(name = "address_id")
+    @Column(name = "address")
     private String address;
 
     @OneToOne

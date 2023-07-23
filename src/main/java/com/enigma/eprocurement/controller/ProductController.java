@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,6 +80,7 @@ public class ProductController {
                         .build());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping
     public ResponseEntity<?> updateProduct(@RequestBody ProductRequest request) {
         ProductResponse productResponse = productService.update(request);
@@ -90,6 +92,7 @@ public class ProductController {
                         .build());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping(path = "/{id}")
     public ResponseEntity<?> hardDeleteById(@PathVariable(name = "id") String id) {
         productService.hardDeleteById(id);
@@ -100,6 +103,7 @@ public class ProductController {
                         .build());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping(path = "/{id}")
     public ResponseEntity<?> softDeleteById(@PathVariable(name = "id") String id) {
         productService.softDeleteById(id);
