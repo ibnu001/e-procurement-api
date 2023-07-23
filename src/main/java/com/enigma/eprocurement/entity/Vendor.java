@@ -5,13 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -38,7 +33,7 @@ public class Vendor {
     @Column(name = "address")
     private String address;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_credential_id")
     private UserCredential userCredential;
 

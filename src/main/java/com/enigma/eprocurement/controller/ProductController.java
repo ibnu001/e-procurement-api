@@ -1,7 +1,6 @@
 package com.enigma.eprocurement.controller;
 
 import com.enigma.eprocurement.Service.ProductService;
-import com.enigma.eprocurement.entity.Product;
 import com.enigma.eprocurement.model.request.ProductRequest;
 import com.enigma.eprocurement.model.response.CommonResponse;
 import com.enigma.eprocurement.model.response.PagingResponse;
@@ -11,11 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.swing.undo.AbstractUndoableEdit;
 import java.util.List;
 
 @RestController

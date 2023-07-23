@@ -10,10 +10,10 @@ import com.enigma.eprocurement.entity.Vendor;
 import com.enigma.eprocurement.model.request.OrderRequest;
 import com.enigma.eprocurement.model.response.*;
 import com.enigma.eprocurement.repository.OrderRepository;
+import com.enigma.eprocurement.specification.OrderSpecification;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.aspectj.weaver.loadtime.Agent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -25,22 +25,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.persistence.JoinColumn;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.io.Writer;
-import java.time.Clock;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -98,16 +90,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Page<OrderResponse> getAllOrder(String vendorName, Integer page, Integer size) {
-        Specification<Order> specification = (root, query, criteriaBuilder) -> {
-            Join<Order, Vendor> vendorJoin = root.join("vendor");
-            if (vendorName != null) {
-                Predicate name = criteriaBuilder.like(criteriaBuilder
-                        .lower(vendorJoin.get("name")), "%" + vendorName.toLowerCase() + "%");
-                return query.where(name).getRestriction();
-            }
-            return query.getRestriction();
-        };
+    public Page<OrderResponse> getAllOrder(String date, Integer month, Integer page, Integer size) {
+
+        Specification<Order> specification = OrderSpecification.getSpecification(date, month);
+
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Order> orders = orderRepository.findAll(specification, pageable);
@@ -124,6 +110,46 @@ public class OrderServiceImpl implements OrderService {
 
 
         return new PageImpl<>(orderResponses, pageable, orders.getTotalElements());
+    }
+
+    @Override
+    public void writeReportToCsv(Writer writer, String date, Integer month) {
+        Specification<Order> specification = OrderSpecification.getSpecification(date, month);
+        List<Order> orders = orderRepository.findAll(specification);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+            List<CsvResponse> csvResponses = orders.stream()
+                    .flatMap(order -> order.getOrderDetails().stream()
+                            .map(orderDetail -> CsvResponse.builder()
+                                    .productCode(orderDetail.getProductPrice().getProduct().getProductCode())
+                                    .orderDate(orderDetail.getOrder().getOrderDate().format(formatter))
+                                    .vendor(orderDetail.getProductPrice().getVendor().getName())
+                                    .productName(orderDetail.getProductPrice().getProduct().getName())
+                                    .category(orderDetail.getProductPrice().getProduct().getCategory().getName())
+                                    .price(orderDetail.getProductPrice().getPrice())
+                                    .quantity(orderDetail.getQuantity())
+                                    .grandTotal(orderDetail.getProductPrice().getPrice() * orderDetail.getQuantity())
+                                    .build())
+                    ).collect(Collectors.toList());
+
+            csvPrinter.printRecord("KODE BARANG", "TANGGAL", "NAMA VENDOR", "NAMA BARANG", "KATEGORI", "HARGA BARANG", "QTY", "JUMLAH");
+
+            for (CsvResponse response : csvResponses) {
+                csvPrinter.printRecord(
+                        response.getProductCode(),
+                        response.getOrderDate(),
+                        response.getVendor(),
+                        response.getProductName(),
+                        response.getCategory(),
+                        response.getPrice(),
+                        response.getQuantity(),
+                        response.getGrandTotal()
+                );
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -178,44 +204,5 @@ public class OrderServiceImpl implements OrderService {
                             .build())
                     .build();
         }).collect(Collectors.toList());
-    }
-
-    @Override
-    public void writeReportToCsv(Writer writer) {
-        List<Order> orders = orderRepository.findAll();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-        try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
-            List<CsvResponse> csvResponses = orders.stream()
-                    .flatMap(order -> order.getOrderDetails().stream()
-                            .map(orderDetail -> CsvResponse.builder()
-                                    .productCode(orderDetail.getProductPrice().getProduct().getProductCode())
-                                    .orderDate(orderDetail.getOrder().getOrderDate().format(formatter))
-                                    .vendor(orderDetail.getProductPrice().getVendor().getName())
-                                    .productName(orderDetail.getProductPrice().getProduct().getName())
-                                    .category(orderDetail.getProductPrice().getProduct().getCategory().getName())
-                                    .price(orderDetail.getProductPrice().getPrice())
-                                    .quantity(orderDetail.getQuantity())
-                                    .grandTotal(orderDetail.getProductPrice().getPrice() * orderDetail.getQuantity())
-                                    .build())
-                    ).collect(Collectors.toList());
-
-            csvPrinter.printRecord("KODE BARANG", "TANGGAL", "NAMA VENDOR", "NAMA BARANG", "KATEGORI", "HARGA BARANG", "QTY", "JUMLAH");
-
-            for (CsvResponse response : csvResponses) {
-                csvPrinter.printRecord(
-                        response.getProductCode(),
-                        response.getOrderDate(),
-                        response.getVendor(),
-                        response.getProductName(),
-                        response.getCategory(),
-                        response.getPrice(),
-                        response.getQuantity(),
-                        response.getGrandTotal()
-                );
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

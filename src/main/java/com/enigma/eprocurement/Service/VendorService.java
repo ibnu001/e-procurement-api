@@ -5,8 +5,6 @@ import com.enigma.eprocurement.model.request.VendorRequest;
 import com.enigma.eprocurement.model.response.VendorResponse;
 import org.springframework.data.domain.Page;
 
-import java.util.List;
-
 public interface VendorService {
 
     Vendor create(Vendor vendor);

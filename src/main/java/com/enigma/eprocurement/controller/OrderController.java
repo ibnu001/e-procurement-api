@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,11 +46,12 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<?> getAllOrder(
-            @RequestParam(name = "vendroName", required = false) String vendorName,
+            @RequestParam(name = "date", required = false, defaultValue = "") String date,
+            @RequestParam(name = "month", required = false) Integer month,
             @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
             @RequestParam(name = "size", required = false, defaultValue = "10") Integer size
     ) {
-        Page<OrderResponse> orderResponses = orderService.getAllOrder(vendorName, page - 1, size);
+        Page<OrderResponse> orderResponses = orderService.getAllOrder(date, month, page - 1, size);
         PagingResponse pagingResponse = PagingResponse.builder()
                 .currentPage(page)
                 .totalPage(orderResponses.getTotalPages())
@@ -67,9 +67,13 @@ public class OrderController {
     }
 
     @GetMapping(path = "/export-to-csv")
-    public ResponseEntity<?> getAllEmployeesInCsv(HttpServletResponse servletResponse) throws IOException {
+    public ResponseEntity<?> getAllEmployeesInCsv(
+            HttpServletResponse servletResponse,
+            @RequestParam(name = "date", required = false, defaultValue = "") String date,
+            @RequestParam(name = "month", required = false) Integer month
+    ) throws IOException {
         servletResponse.setContentType("text/csv");
-        orderService.writeReportToCsv(servletResponse.getWriter());
+        orderService.writeReportToCsv(servletResponse.getWriter(), date, month);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report.csv\"")
