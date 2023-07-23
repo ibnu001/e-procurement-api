@@ -1,5 +1,6 @@
 package com.enigma.eprocurement.Service.impl;
 
+import com.enigma.eprocurement.Service.CategoryService;
 import com.enigma.eprocurement.Service.ProductPriceService;
 import com.enigma.eprocurement.Service.ProductService;
 import com.enigma.eprocurement.Service.VendorService;
@@ -23,9 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +39,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final VendorService vendorService;
 
+    private final CategoryService categoryService;
+
     @Transactional(rollbackOn = Exception.class)
     @Override
     public ProductResponse create(ProductRequest request) {
@@ -47,8 +48,11 @@ public class ProductServiceImpl implements ProductService {
         Vendor vendor = vendorService.getById(request.getVendorId());
 
         Product product = Product.builder()
+                .productCode(generateProductCode())
                 .name(request.getProductName())
                 .description(request.getDescription())
+                .category(categoryService.getOrSave(request.getCategory()))
+                .isDelete(false)
                 .build();
         productRepository.saveAndFlush(product);
 
@@ -61,19 +65,7 @@ public class ProductServiceImpl implements ProductService {
                 .build();
         productPriceService.create(productPrice);
 
-        return ProductResponse.builder()
-                .id(product.getId())
-                .productName(product.getName())
-                .description(product.getDescription())
-                .price(productPrice.getPrice())
-                .stock(productPrice.getStock())
-                .vendor(VendorResponse.builder()
-                        .id(vendor.getId())
-                        .name(vendor.getName())
-                        .mobilePhone(vendor.getMobilePhone())
-                        .address(vendor.getAddress())
-                        .build())
-                .build();
+        return toProductResponse(product, productPrice, vendor);
     }
 
     @Transactional(rollbackOn = Exception.class)
@@ -100,16 +92,22 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> specification = ProductSpecification.getSpecification(name, price);
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> products = productRepository.findAll(specification, pageable);
+
+        Set<String> processedProductIds = new HashSet<>();
         List<ProductResponse> productResponses = new ArrayList<>();
         for (Product product : products.getContent()) {
+            if (processedProductIds.contains(product.getId())) continue;
+
+
             Optional<ProductPrice> productPrice = product.getProductPrices().stream()
-                    .filter(ProductPrice::getIsActive).findFirst();
+                    .filter(ppActive -> ppActive.getIsActive().equals(true)).findFirst();
 
             if (productPrice.isEmpty()) continue;
 
             Vendor vendor = productPrice.get().getVendor();
 
             productResponses.add(toProductResponse(product, productPrice.get(), vendor));
+            processedProductIds.add(product.getId());
         }
 
         return new PageImpl<>(productResponses, pageable, products.getTotalElements());
@@ -121,6 +119,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = findByIdOrThrowNotFound(request.getProductId());
         product.setName(request.getProductName());
         product.setDescription(request.getDescription());
+        product.setCategory(categoryService.getOrSave(request.getCategory()));
 
         ProductPrice productPriceActive = productPriceService.findProductPriceActive(request.getProductId(), true);
 
@@ -165,15 +164,23 @@ public class ProductServiceImpl implements ProductService {
     private static ProductResponse toProductResponse(Product product, ProductPrice productPrice, Vendor vendor) {
         return ProductResponse.builder()
                 .id(product.getId())
+                .productCode(product.getProductCode())
                 .productName(product.getName())
                 .description(product.getDescription())
+                .category(product.getCategory().getName())
                 .price(productPrice.getPrice())
                 .stock(productPrice.getStock())
                 .vendor(VendorResponse.builder()
                         .id(vendor.getId())
                         .name(vendor.getName())
+                        .mobilePhone(vendor.getMobilePhone())
                         .address(vendor.getAddress())
                         .build())
                 .build();
+    }
+
+    private String generateProductCode() {
+        Integer size = productRepository.findAll().size() + 1;
+        return String.format("KB%02d", size);
     }
 }

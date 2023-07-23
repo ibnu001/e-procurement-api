@@ -31,4 +31,7 @@ public class ProductRequest {
     @NotBlank(message = "vendor id is required")
     private String vendorId;
 
+    @NotBlank(message = "category is required")
+    private String category;
+
 }

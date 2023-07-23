@@ -47,6 +47,10 @@ public class Product {
     @Column(name = "is_delete")
     private Boolean isDelete;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     @CreatedDate
     @Column(name = "created_at")
     private LocalDateTime createdAt;

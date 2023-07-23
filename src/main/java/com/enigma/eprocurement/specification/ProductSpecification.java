@@ -22,6 +22,8 @@ public class ProductSpecification {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(productPrices.get("price"), price));
             }
 
+            predicates.add(criteriaBuilder.isFalse(root.get("isDelete")));
+
             return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
         };
     }
